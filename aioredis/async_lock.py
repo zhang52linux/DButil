@@ -13,13 +13,14 @@ class SentinelThread(Thread):
         super(SentinelThread, self).__init__()
         self.func = func
         self.args = args
-        self.loop = loop    # 每个线程有个事件循环, 
+        self.loop = loop    # 每个线程有个事件循环,
 
     def run(self):
         self.loop.create_task(self.func(*self.args))  # 在当前事件循环中创建一个任务, 任务会被放到调度器中
 
 
-#todo 实现分布式锁测试
+# todo 实现分布式锁测试
+# todo 分布式锁的使用场景/作用: 分布式锁可以对一些共享资源进行锁操作<比如某一个资源同一时间只允许一个线程进行访问>
 class lockTest(object):
     def __init__(self) -> None:
         super().__init__()
@@ -33,15 +34,14 @@ class lockTest(object):
         # create redis link
         self.rds = AsyncRedisSentinelHelper(uri_dic)
         self._uuid = "9c89151d-28ec-31da-b1fc-16ca16dabe64"
-        self.loop = asyncio.get_event_loop() # 主线程的事件循环
-    
+        self.loop = asyncio.get_event_loop()  # 主线程的事件循环
 
     async def extend_expire_time(self, expire_timeout=60):
+        reader = await self.rds.writer
         while not self.stop_threads:
             try:
-                reader = await self.rds.writer
                 lock = """
-                    if (redis.call('exists', KEYS[1]) == 1) then 
+                    if (redis.call('exists', KEYS[1]) == 1) then
                         if (redis.call('TTL', KEYS[1]) <= ARGV[2]/3) then
                             redis.call('expire', KEYS[1], tonumber(ARGV[2]));
                         end
@@ -52,12 +52,11 @@ class lockTest(object):
                 time.sleep(3)
             except Exception:
                 break
-            
 
     async def lock_key(self, expire_timeout=60, start=0, endpoint=-1):
         reader = await self.rds.writer
         lock = """
-            if (redis.call('exists', KEYS[1]) == 1) then 
+            if (redis.call('exists', KEYS[1]) == 1) then
                 return 0;
             end;
             redis.call('setnx', KEYS[1], ARGV[1])
@@ -67,7 +66,7 @@ class lockTest(object):
         """
         lock = reader.register_script(lock)
         self.stop_threads = False
-        t1 = SentinelThread(self.extend_expire_time, loop=self.loop) # 哨兵线程, 监控锁的过期时间
+        t1 = SentinelThread(self.extend_expire_time, loop=self.loop)  # 哨兵线程, 监控锁的过期时间
         t1.start()
         result = await lock(keys=["lock:details", "December:details"], args=[self._uuid, expire_timeout, start, endpoint])
         self.stop_threads = True
@@ -76,7 +75,6 @@ class lockTest(object):
         elif isinstance(result, int):
             result = []
         return result
-
 
     async def unlock_key(self):
         reader = await self.rds.writer
@@ -108,7 +106,7 @@ async def main():
         if await testlock.unlock_key():
             print("锁释放成功...")
         else:
-            print("锁释放失败...") # 可能存在的情况: 执行业务逻辑代码时,锁过期了<弊端: 其他进程会拿到锁，开始执行，此时就会有两个进程都在操作共享资源>
+            print("锁释放失败...")  # 可能存在的情况: 执行业务逻辑代码时,锁过期了<弊端: 其他进程会拿到锁，开始执行，此时就会有两个进程都在操作共享资源>
 
 
 if __name__ == '__main__':
