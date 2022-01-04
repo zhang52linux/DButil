@@ -20,7 +20,7 @@ async def main():
     random_proxy = await get_proxy()
     print(random_proxy)
     search_url = f'https://s.taobao.com/search?initiative_id=staobaoz_20210817&ie=utf8&spm=a21bo.21814703.201856-taobao-item.2&sourceId=tb.index&search_type=item&ssid=s5-e&commend=all&imgfile=&q=联想y9000&suggest=history_1&_input_charset=utf-8&wq=biyunt&suggest_query=biyunt&source=suggest&bcoffset=4&p4ppushleft=%2C48&s=44&data-key=s&data-value=88'
-    proxies = {'http:': f'http://proxy:12qwaszx@{random_proxy}:8000', 'https:': f'http://proxy:12qwaszx@{random_proxy}:8000'}
+    proxies = {'http://': f'http://proxy:12qwaszx@{random_proxy}:8000', 'https://': f'http://proxy:12qwaszx@{random_proxy}:8000'}
     # print(httpx.get(f"https://httpbin.org/get", proxies=proxies).json())
     # print(requests.get(f"http://httpbin.org/get", proxies=proxies).json())
     # pip install httpx[http2]  支持http2, 高并发可以使用

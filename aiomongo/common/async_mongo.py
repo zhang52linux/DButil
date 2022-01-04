@@ -10,7 +10,7 @@ root_logger = logging.getLogger()
 
 class MongoGetter:
 
-    def __init__(self, client, collection, body=None, return_fields=None, page_size=100, total_size=None,
+    def __init__(self, client, collection, body=None, return_fields=None, page_size=10000, total_size=None,
                  cursor=None, retry=5, logger=root_logger):
         self.client = client
         self.collection = collection
