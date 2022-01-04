@@ -50,7 +50,7 @@ class BrowserLoginExcutor:
                     proxy = {"server": "http://{}:8000/".format(proxy_ip), "username": "proxy", "password": "12qwaszx"}
                     # proxy = None
                     playwright = await async_playwright().start()
-                    browser = await playwright.firefox.launch(ignore_default_args=ignore_default_args, headless=False, proxy=proxy)
+                    browser = await playwright.firefox.launch(ignore_default_args=ignore_default_args, headless=True, proxy=proxy)
                     context = await browser.new_context()
                     page = await context.new_page()
                     await page.set_extra_http_headers({'User-Agent': user_agent})
