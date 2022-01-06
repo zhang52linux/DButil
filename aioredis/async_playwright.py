@@ -2,9 +2,11 @@
 """
 *=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 Author: zhangsanyong
-File Name: browser.py
-Create Date: 2022/01/04 10:38
-Description:
+Date: 2022-01-06 15:06:28
+LastEditors: zhangsanyong
+LastEditTime: 2022-01-06 15:06:29
+FilePath: /tornado/DButil/aioredis/async_playwright.py
+Description: nohup python -u "/home/ubuntu/tornado/DButil/aioredis/async_playwright.py" > /home/ubuntu/logs/supervisor/playwright_server/tornado_playwright_server.log 2>&1 &
 *=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 """
 import datetime
@@ -14,6 +16,7 @@ import aiohttp
 import asyncio
 import asyncio
 from playwright.async_api import async_playwright
+from loguru import logger
 from common.async_sentinel import AsyncRedisSentinelHelper
 
 PROXY_URL = 'http://api01.idataapi.cn:8000/proxyip?status=ok&apikey=yPCg6ig17c811fD2EzCtm0oz7FE8BtCeS0vQxd9n6S4ZqBO9fvMJZFgR2GaOxZoT'
@@ -67,27 +70,23 @@ class BrowserLoginExcutor:
                             'ip': proxy_ip,
                             'cookies': cookies
                         }
-                        print(f'{datetime.datetime.now()} redis_pool.delete(redis_key)')
+                        logger.success(f'{datetime.datetime.now()} redis_pool.delete(redis_key)')
                         await redis_pool.delete(redis_key)    # 先删除之前的redis_key
-                        print(f'{datetime.datetime.now()} redis_pool.sadd(redis_key, json.dumps(result))')
+                        logger.success(f'{datetime.datetime.now()} redis_pool.sadd(redis_key, json.dumps(result))')
                         await redis_pool.sadd(redis_key, json.dumps(result))  # 将获取到的结果存入redis_key
                         await redis_pool.delete(refresh_key)  # 最后删除refresh_key, 完成一次cookie的更新
                         await asyncio.sleep(60)
                     except Exception as e:
-                        print(e)
+                        logger.error(e)
                     finally:
                         await page.close()
                         await context.close()
                         await browser.close()
                 else:
-                    print(f'{datetime.datetime.now()} no flag: await asyncio.sleep(5)')
+                    logger.info(f'{datetime.datetime.now()} no flag: await asyncio.sleep(5)')
                     await asyncio.sleep(5)
             except BaseException:
-                if redis_pool:
-                    redis_pool.close()
-                    await redis_pool.wait_closed()
-                    redis_pool = await self.rds.writer
-                print(f'{datetime.datetime.now()} error: await asyncio.sleep(5)')
+                logger.error(f'{datetime.datetime.now()} error: await asyncio.sleep(5)')
                 await asyncio.sleep(5)
 
     async def get_proxy(self, retry=3):
