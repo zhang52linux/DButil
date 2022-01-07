@@ -1,10 +1,11 @@
 # _*_ coding: utf-8 _*_
 import asyncio
-from re import T
 import aioredis.sentinel
 import feapson
 
 # 既是socket连接超时，也是socket读/写超时
+
+
 class AsyncRedisSentinelHelper():
     def __init__(self, config: dict):
         self.service_name = config["service_name"]
@@ -21,7 +22,7 @@ class AsyncRedisSentinelHelper():
     async def get_slave_redis(self) -> tuple:
         info = await self.sentinel.discover_slaves(self.service_name)
         return info
-    
+
     @property
     async def reader(self):
         return self.slave
