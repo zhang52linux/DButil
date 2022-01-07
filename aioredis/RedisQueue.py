@@ -55,9 +55,6 @@ async def _test():
     #     await asyncio.sleep(1)
     # await input()
     await output()
-    #用户登录名称 sms@1729679772434329.onaliyun.com
-    # AccessKey ID LTAI5tRxHvm37ZPoXFChH8Sg
-    # AccessKey Secret hTis10sdFpePllTUIhP1zmSd63VjMR
 
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()
