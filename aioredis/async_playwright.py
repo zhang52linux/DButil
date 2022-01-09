@@ -35,8 +35,7 @@ class BrowserLoginExcutor:
         self.rds = AsyncRedisSentinelHelper(uri_dic)
 
     def start(self):
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self.run())
+        asyncio.run(self.run())
 
     async def run(self):
         redis_pool = await self.rds.writer
