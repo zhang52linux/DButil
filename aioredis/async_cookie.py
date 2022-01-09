@@ -11,8 +11,13 @@ Description: 请求获取cf5s盾的cookie(git rm -rf --cached aioredis/async_coo
 """
 import asyncio
 import aiohttp
+
+import uvloop
+asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 from loguru import logger
 import time
+import warnings
+warnings.filterwarnings('ignore')
 
 '''
 vrrp概念: 
@@ -30,34 +35,37 @@ vrrp应用:
 '''
 
 class FuckCfCookie:
+    pass_count = 0
+        
     def start(self):
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(self.run())
-
-    async def run(self):
-        timeout = aiohttp.ClientTimeout(total=3)
-        total_count = 1000
-        pass_count = 0
+        asyncio.run(self.main())
+    
+    
+    async def main(self):
+        total_count = 28
         start_time = time.time()
+        timeout = aiohttp.ClientTimeout(total=3)
         async with aiohttp.ClientSession() as session:
-            for i in range(total_count):
-                try:
-                    result = await self.get_cf_cookie()
-                    headers = {
-                        "User-Agent": result["ua"],
-                        "cookie": result["cookie"]
-                    }
-                    proxy = "http://proxy:12qwaszx@{}:8000".format(result["ip"])
-                    async with session.get("https://steamdb.info/", headers=headers, proxy=proxy, timeout=timeout) as resp:
-                        assert resp.status == 200
-                        logger.info(resp.status)
-                        pass_count += 1
-                        await asyncio.sleep(0.3)
-                except BaseException:
-                    logger.error("error")
-                    await asyncio.sleep(3)
-            end_time = time.time()
-            logger.success("测试案例{}个,成功{}个,失败{}个,通过率{:.4%},用时:{}".format(total_count, pass_count, (total_count - pass_count), (pass_count / total_count), (end_time - start_time)))
+            await asyncio.gather(*[self.run(session, timeout) for i in range(total_count)])
+        end_time = time.time()
+        logger.success("测试案例{}个,成功{}个,失败{}个,通过率{:.4%},用时:{}".format(total_count, self.pass_count, (total_count - self.pass_count), (self.pass_count / total_count), (end_time - start_time)))
+        
+
+    async def run(self, session, timeout):
+        try:
+            result = await self.get_cf_cookie()
+            headers = {
+                "User-Agent": result["ua"],
+                "cookie": result["cookie"]
+            }
+            proxy = "http://proxy:12qwaszx@{}:8000".format(result["ip"])
+            async with session.get("https://steamdb.info/", headers=headers, proxy=proxy, timeout=timeout) as resp:
+                assert resp.status == 200
+                logger.info(resp.status)
+                self.pass_count += 1
+        except BaseException:
+            logger.error("error")
+
 
     @staticmethod
     async def get_cf_cookie():
