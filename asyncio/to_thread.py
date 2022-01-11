@@ -1,4 +1,8 @@
-import asyncio, time
+# _*_ coding: utf-8 _*_
+
+import asyncio
+import time
+
 
 def blocking_io():
     print(f"start blocking_io at {time.strftime('%X')}")
@@ -6,6 +10,7 @@ def blocking_io():
     # IO-bound operation, such as file operations.
     time.sleep(1)
     print(f"blocking_io complete at {time.strftime('%X')}")
+
 
 async def main():
     print(f"started main at {time.strftime('%X')}")

@@ -1,50 +1,9 @@
-# import asyncio
-# import aiohttp
-# import aioredis
-# import random
-#
-# async def get_proxy():
-#     redis = aioredis.from_url("redis://8.135.50.150:22222", db=0)
-#     res = await redis.hgetall("idata_proxy_pool")
-#     proxy_list = list(map(lambda key: key.decode("utf-8").split('|')[0], res.values()))
-#     return random.choice(proxy_list)
-#
-# async def main():
-#    headers = {"user-agent": f"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/{random.randint(1, 999)}.36 (KHTML, like Gecko) Chrome/81.0.4044.129 Safari/537.36"}
-#    random_proxy = await get_proxy()
-#    print(random_proxy)
-#    proxy = f'http://{random_proxy}:8000'
-#    print(proxy)
-#    async with aiohttp.ClientSession(headers=headers) as session:
-#        try:
-#            async with session.get('https://httpbin.org/get', proxy=proxy) as response:
-#                print(await response.text())
-#        except Exception as e:
-#            print('Error：', e.args)
-#
-# if __name__ == '__main__':
-#    asyncio.run(main())
-
-
+# _*_ coding: utf-8 _*_
 import asyncio
 import aiohttp
 import aioredis
 import random
 
-# proxy = 'http://124.229.230.188:8000'
-# proxy_conf = {
-#
-# }
-# ip = '124.229.228.171'
-# proxy = {"http": f'{ip}:8000', "https": f'{ip}:8000'}
-# proxy = "http": "http://%(user)s:%(pwd)s@%(proxy)s/"
-# async def main():
-#    async with aiohttp.ClientSession(auth=aiohttp.BasicAuth('proxy','12qwaszx')) as session:
-#        try:
-#            async with session.get('http://httpbin.org/ip',proxy=proxy) as response:
-#                print(await response.text())
-#        except Exception as e:
-#            print('Error：', e.args)
 
 # 修改事件循环的策略，不能放在协程函数内部，这条语句要先执行
 asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())  # 解决设置代理后ssl报错

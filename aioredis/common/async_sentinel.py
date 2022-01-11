@@ -37,9 +37,9 @@ class AsyncRedisSentinelHelper():
             socket_timeout=600,
             retry_on_timeout=True,
             socket_keepalive=True,
+            decode_responses=True,
             password=self.password,
             max_connections=1000,
-            decode_responses=True,
             encoding='utf-8',
             db=self.db
         )

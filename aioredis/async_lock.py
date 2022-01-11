@@ -66,9 +66,8 @@ class lockTest(object):
         """
         lock = reader.register_script(lock)
         self.stop_threads = False
-        # t1 = SentinelThread(self.extend_expire_time, loop=self.loop)  # 哨兵线程, 监控锁的过期时间
-        # t1.start()
-        asyncio.create_task(self.extend_expire_time()) # 哨兵协程, 监控锁的过期时间
+        t1 = SentinelThread(self.extend_expire_time, loop=self.loop)  # 哨兵线程, 监控锁的过期时间
+        t1.start()
         result = await lock(keys=["lock:details", "December:details"], args=[self._uuid, expire_timeout, start, endpoint])
         self.stop_threads = True
         if isinstance(result, list) and result:

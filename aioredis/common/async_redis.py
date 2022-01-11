@@ -17,9 +17,12 @@ class AsyncRedis(object):
         self.config = dict(
             url="redis://{0}:{1}".format(config['host'], config['port']),
             password=config.get("password", None),
+            socket_timeout=600,
+            retry_on_timeout=True,
+            socket_keepalive=True,
             decode_responses=True,
             encoding="utf-8",   # 设置编码, 返回后的结果会自动 decode
-            max_connections=10,
+            max_connections=1000,
             db=config["db"]
         )
         self.client_map = {}
@@ -68,5 +71,4 @@ async def main():
             print(await response.text())
 
 if __name__ == "__main__":
-
     asyncio.run(main())
