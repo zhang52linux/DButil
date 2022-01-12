@@ -15,6 +15,17 @@ from common.async_redis import AsyncRedis
 from loguru import logger
 from collections import deque
 
+'''
+关于本实验使用lua脚本的原由:
+-- Redis服务器会单线程原子性执行Lua脚本，保证Lua脚本在处理的过程中不会被任意其它请求打断
+使用Lua脚本的好处:
+-- 减少网络开销: 可以将多个命令用一个请求完成减少了网络往返时延
+-- 原子操作: Redis会将整个脚本作为一个整体执行，中间不会被其他命令插入
+-- 复用: 客户端发送的脚本会保存在Redis服务器中，其他客户端可以复用这一脚本(在All Redis Info 中可查看 used_memory_lua)
+疑问?:
+-- 其他客户端如何使用redis服务器上的lua脚本
+'''
+
 
 class MoveLocalData(object):
     def __init__(self) -> None:
@@ -48,12 +59,12 @@ class MoveLocalData(object):
                     end;
                 """
                 lock = reader.register_script(lock)
-                await lock(keys=["lock:details", "December:details"], args=[self._uuid, expire_timeout])
+                await lock(keys=["lock:details", "January:details"], args=[self._uuid, expire_timeout])
                 await asyncio.sleep(3)
             except BaseException:
                 break
 
-    async def lock_key(self, expire_timeout=60, startpoint=20000, endpoint=24999):
+    async def lock_key(self, expire_timeout=60, startpoint=0, endpoint=100):
         '''
         description: 判断锁是否存在，存在则判断是否是本节点的锁，是则直接取数据, 锁不存在则加锁然后取数据
         param expire_timeout: 默认超时时间
@@ -79,13 +90,12 @@ class MoveLocalData(object):
         lock = reader.register_script(lock)
         self.stop_task = False
         asyncio.create_task(self.extend_expire_time())  # 哨兵协程, 监控锁的过期时间
-        result = await lock(keys=["lock:details", "December:details"], args=[self._uuid, expire_timeout, startpoint, endpoint])
+        result = await lock(keys=["lock:details", "January:details"], args=[self._uuid, expire_timeout, startpoint, endpoint])
         self.stop_task = True
         if isinstance(result, list) and result:
             result = deque(map(lambda e: e, result))
         elif isinstance(result, int):
-            logger.error("本次连接没有获取到数据!")
-            result = []
+            return result
         return result
 
     async def unlock_key(self):
@@ -122,10 +132,13 @@ async def main():
                 redis_lcoal = await redis_pool.client()
                 logger.success(f"开始复制第{key}部分数据({area[0]}--{area[1]})")
                 data_list = await fuckdata.lock_key(startpoint=area[0], endpoint=area[1])
-                if isinstance(data_list, list) and not data_list:
-                    logger.error(f"重试第{key}部分数据({area[0]}--{area[1]})")
+                if isinstance(data_list, int):
+                    logger.error("资源被锁! 等待3s......")
                     await asyncio.sleep(3)
-                    continue
+                elif isinstance(data_list, list) and not data_list:
+                    logger.error("本次操作没有获取到数据!!!")
+                    logger.error(f"重试第{key}部分数据({area[0]}--{area[1]})")
+                    await asyncio.sleep(1)
                 else:
                     await redis_lcoal.lpush("January:details", *data_list)
                     await fuckdata.unlock_key()

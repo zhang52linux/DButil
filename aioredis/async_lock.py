@@ -48,12 +48,12 @@ class lockTest(object):
                     end;
                 """
                 lock = reader.register_script(lock)
-                await lock(keys=["lock:details", "December:details"], args=[self._uuid, expire_timeout])
+                await lock(keys=["lock:details", "January:details"], args=[self._uuid, expire_timeout])
                 time.sleep(3)
             except Exception:
                 break
 
-    async def lock_key(self, expire_timeout=60, start=0, endpoint=-1):
+    async def lock_key(self, expire_timeout=60, start=0, endpoint=100):
         reader = await self.rds.writer
         lock = """
             if (redis.call('exists', KEYS[1]) == 1) then
@@ -68,7 +68,7 @@ class lockTest(object):
         self.stop_threads = False
         t1 = SentinelThread(self.extend_expire_time, loop=self.loop)  # 哨兵线程, 监控锁的过期时间
         t1.start()
-        result = await lock(keys=["lock:details", "December:details"], args=[self._uuid, expire_timeout, start, endpoint])
+        result = await lock(keys=["lock:details", "January:details"], args=[self._uuid, expire_timeout, start, endpoint])
         self.stop_threads = True
         if isinstance(result, list) and result:
             result = list(map(lambda e: feapson.loads(e), result))
@@ -98,7 +98,7 @@ async def main():
         new_data_list = np.array(data_list)
         # 利用pandas的 json_normalize 对json数据进行解析，将json串解析为 DataFrame格式
         df = pd.json_normalize(new_data_list)
-        writer = pd.ExcelWriter("F:/Python/spiter/DButil/data/steamspy_detail.xlsx", engine='openpyxl')
+        writer = pd.ExcelWriter("../data/steamspy_detail.xlsx", engine='openpyxl')
         df.to_excel(writer, index=False, sheet_name="steamdb", encoding="utf_8_sig")
         writer.save()
     finally:
