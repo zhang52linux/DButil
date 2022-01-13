@@ -120,7 +120,7 @@ async def main():
     try:
         fuckdata = MoveLocalData()
         uri_dic = dict(
-            host="192.168.234.130",
+            host="127.0.0.1",
             port=6379,
             db=0
         )
