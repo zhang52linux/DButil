@@ -20,7 +20,7 @@ import warnings
 warnings.filterwarnings('ignore')
 
 '''
-vrrp概念: 
+vrrp概念:
 - VRRP(Virtual Router Redundancy Protocol，虚拟路由器冗余协议)
 vrrp作用:
 - 将可以承担网关功能的一组路由器加入到备份组中，形成一台虚拟路由器，这样主机的网关设置成虚拟网关，就能够实现冗余
@@ -34,13 +34,13 @@ vrrp应用:
 - keepalived
 '''
 
+
 class FuckCfCookie:
     pass_count = 0
-        
+
     def start(self):
         asyncio.run(self.main())
-    
-    
+
     async def main(self):
         total_count = 28
         start_time = time.time()
@@ -49,7 +49,6 @@ class FuckCfCookie:
             await asyncio.gather(*[self.run(session, timeout) for i in range(total_count)])
         end_time = time.time()
         logger.success("测试案例{}个,成功{}个,失败{}个,通过率{:.4%},用时:{}".format(total_count, self.pass_count, (total_count - self.pass_count), (self.pass_count / total_count), (end_time - start_time)))
-        
 
     async def run(self, session, timeout):
         try:
@@ -63,9 +62,9 @@ class FuckCfCookie:
                 assert resp.status == 200
                 logger.info(resp.status)
                 self.pass_count += 1
+            await asyncio.sleep(1)
         except BaseException:
             logger.error("error")
-
 
     @staticmethod
     async def get_cf_cookie():
