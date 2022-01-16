@@ -140,7 +140,7 @@ async def main():
                     logger.error(f"重试第{key}部分数据({area[0]}--{area[1]})")
                     await asyncio.sleep(1)
                 else:
-                    await redis_lcoal.lpush("January:details", *data_list)
+                    await redis_lcoal.lpush("test:details", *data_list)
                     await fuckdata.unlock_key()
                     break
 

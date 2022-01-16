@@ -34,7 +34,7 @@ class AsyncRedisSentinelHelper():
     def init_master_redis_connect(self):
         self.master = self.sentinel.master_for(
             service_name=self.service_name,
-            socket_timeout=600,
+            socket_timeout=60,
             retry_on_timeout=True,
             socket_keepalive=True,
             decode_responses=True,
