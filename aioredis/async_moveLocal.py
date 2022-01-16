@@ -41,6 +41,7 @@ class MoveLocalData(object):
         self.rds = AsyncRedisSentinelHelper(uri_dic)
         self._uuid = "9c89151d-28ec-31da-b1fc-16ca16dabe64"
         self.loop = asyncio.get_event_loop()  # 主线程的事件循环
+        self.retry_count = 3
 
     async def extend_expire_time(self, expire_timeout=60):
         '''
@@ -63,7 +64,38 @@ class MoveLocalData(object):
                 await asyncio.sleep(3)
             except BaseException:
                 break
-
+    
+    async def len_key(self):
+        '''
+            - description: 求key的长度
+        '''
+        reader = await self.rds.writer
+        lock = """
+            if (redis.call('exists', KEYS[1]) == 1) then
+                return redis.call('llen', KEYS[1])
+            else
+                return 0
+            end;
+        """
+        lock = reader.register_script(lock)
+        result = await lock(keys=["January:details"])
+        return result
+    
+    # 装饰器做安全函数
+    def safe_function(func):
+        async def wrapper(self, *arg, **kwargs):
+            for retry in range(self.retry_count):
+                try:
+                    result = await func(self, *arg, **kwargs)
+                    return result
+                except BaseException:
+                    logger.error("第{}次重试, error: {}".format((retry + 1), e))
+                    self.total_retry_count += 1
+                    await asyncio.sleep(2)
+            return deque()
+        return wrapper
+        
+    @safe_function
     async def lock_key(self, expire_timeout=60, startpoint=0, endpoint=100):
         '''
         description: 判断锁是否存在，存在则判断是否是本节点的锁，是则直接取数据, 锁不存在则加锁然后取数据
@@ -95,10 +127,14 @@ class MoveLocalData(object):
         if isinstance(result, list) and result:
             result = deque(map(lambda e: e, result))
         elif isinstance(result, int):
-            return result
+            logger.error("资源被锁! 等待2s......")
+            raise ValueError
         return result
 
     async def unlock_key(self):
+        '''
+            - description: 释放key的锁
+        '''
         reader = await self.rds.writer
         unlock = """
             if (redis.call('exists', KEYS[1]) == 1) then
@@ -116,6 +152,24 @@ class MoveLocalData(object):
         return result
 
 
+
+async def splitArray(internal:int=1000, len_list:int=0):
+    area_detail = dict()
+    start = 0
+    end = -1
+    temp_total = len_list
+    index = 1
+    while temp_total > internal:
+        start = end + 1
+        end = internal + end
+        temp_total -= internal
+        area_detail[index] =[start, end]
+        index += 1
+    start = end + 1
+    area_detail[index] =[start, len_list]
+    return area_detail
+
+
 async def main():
     try:
         fuckdata = MoveLocalData()
@@ -125,25 +179,18 @@ async def main():
             db=0
         )
         redis_pool = AsyncRedis(uri_dic)
-        retry_count = 3
-        area_detail = {"1": [0, 4999], "2": [5000, 9999], "3": [10000, 14999], "4": [15000, 19999], "5": [20000, 24999], "6": [25000, 29999], "7": [30000, 34999], "8": [35000, 39999], "9": [40000, 44999], "10": [45000, -1]}
+        len_list = await fuckdata.len_key()
+        area_detail = await splitArray(len_list=len_list)
         for key, area in area_detail.items():
-            for retry in range(retry_count):
-                redis_lcoal = await redis_pool.client()
-                logger.success(f"开始复制第{key}部分数据({area[0]}--{area[1]})")
-                data_list = await fuckdata.lock_key(startpoint=area[0], endpoint=area[1])
-                if isinstance(data_list, int):
-                    logger.error("资源被锁! 等待3s......")
-                    await asyncio.sleep(3)
-                elif isinstance(data_list, list) and not data_list:
-                    logger.error("本次操作没有获取到数据!!!")
-                    logger.error(f"重试第{key}部分数据({area[0]}--{area[1]})")
-                    await asyncio.sleep(1)
-                else:
-                    await redis_lcoal.lpush("test:details", *data_list)
-                    await fuckdata.unlock_key()
-                    break
-
+            redis_lcoal = await redis_pool.client()
+            logger.success(f"开始读取第{key}部分数据({area[0]}--{area[1]})")
+            data_list = await fuckdata.lock_key(startpoint=area[0], endpoint=area[1])
+            if isinstance(data_list, deque) and data_list:
+                logger.success(f"成功获取到第{key}部分数据, 正在转存至本地...")
+                await redis_lcoal.lpush("test:details", *data_list)
+                await fuckdata.unlock_key()
+            else:
+                logger.error(f"result:0, 本次操作没有获取到数据!!!")
     except BaseException as e:
         logger.error(e)
         await fuckdata.unlock_key()
