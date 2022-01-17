@@ -11,7 +11,8 @@ Description: 请求获取cf5s盾的cookie(git rm -rf --cached aioredis/async_aio
 """
 import asyncio
 import aiohttp
-
+from functools import wraps
+import traceback
 import uvloop
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 from loguru import logger
@@ -39,35 +40,44 @@ class FuckCfCookie:
     pass_count = 0
 
     def start(self):
-        self.retry_count = 5
         self.total_retry_count = 0
         self.total_count = 1000
         asyncio.run(self.main())
-    
-    
+
     # 装饰器做安全函数
-    def safe_function(func):
-        async def wrapper(self, *arg, **kwargs):
-            for retry in range(self.retry_count):
-                try:
-                    await func(self, *arg, **kwargs)
-                    return True
-                except (asyncio.exceptions.TimeoutError, AssertionError, aiohttp.client_exceptions.ClientProxyConnectionError) as e:
-                    logger.error("第{}次重试, error: {}".format((retry + 1), e))
-                    self.total_retry_count += 1
-                    await asyncio.sleep(2)
-        return wrapper
+    def retry_if_exception(ex: Exception, retry_cout: int = 3, wait: int = 2, out_exc=True):
+        """ 捕获异常进行重试
+
+        :param ex: 异常
+        :param retry: 重试次数
+        :param wait: 重试间隔(秒)
+        :param out_exc: 输出错误栈
+        """
+        def safe_function(func):
+            @wraps(func)
+            async def wrapper(self, *arg, **kwargs):
+                for retry in range(retry_cout):
+                    try:
+                        await func(self, *arg, **kwargs)
+                        return True
+                    except ex as e:
+                        logger.warning(f'第{(retry + 1)}次重试, {func.__name__ }:{func.__doc__ }:{e.args}')
+                        out_exc and logger.error(traceback.format_exc())
+                        self.total_retry_count += 1
+                        await asyncio.sleep(wait)
+            return wrapper
+        return safe_function
 
     async def main(self):
         start_time = time.time()
-        timeout = aiohttp.ClientTimeout(total=3)
+        timeout = aiohttp.ClientTimeout(total=1)
         async with aiohttp.ClientSession() as session:
             for _ in range(self.total_count):
                 await self.run(session, timeout)
         end_time = time.time()
-        logger.success("测试案例{}个,成功{}个,失败{}个,重试{}个,通过率{:.4%},用时:{}, 平均{}s".format(self.total_count, self.pass_count, (self.total_count - self.pass_count), self.total_retry_count, (self.pass_count / self.total_count), (end_time - start_time), round((end_time - start_time)/(self.pass_count + self.total_retry_count), 2)))
-    
-    @safe_function
+        logger.success("测试案例{}个,成功{}个,失败{}个,重试{}个,通过率{:.4%},用时:{}, 平均{}s".format(self.total_count, self.pass_count, (self.total_count - self.pass_count), self.total_retry_count, (self.pass_count / self.total_count), (end_time - start_time), round((end_time - start_time) / (self.pass_count + self.total_retry_count), 2)))
+
+    @retry_if_exception(BaseException)
     async def run(self, session, timeout):
         result = await self.get_cf_cookie()
         headers = {
@@ -79,7 +89,6 @@ class FuckCfCookie:
             assert resp.status == 200
             logger.info(resp.status)
             self.pass_count += 1
-    
 
     @staticmethod
     async def get_cf_cookie():
