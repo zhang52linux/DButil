@@ -3,7 +3,14 @@ import asyncio
 import aioredis.sentinel
 import feapson
 
-# 既是socket连接超时，也是socket读/写超时
+
+'''
+基于主从复制原理实现:
+    - 好处:
+        - 数据冗余, 实现同一个字段在多个数据库中存在
+        - 负载均衡, 主从复制实现了读写分离
+        - 故障恢复, 主节点挂掉后，从节点补上
+'''
 
 
 class AsyncRedisSentinelHelper():
