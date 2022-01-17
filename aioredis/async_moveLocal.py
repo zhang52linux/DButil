@@ -10,6 +10,7 @@ Description:
 *=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 """
 import asyncio
+import time
 from common.async_sentinel import AsyncRedisSentinelHelper
 from common.async_redis import AsyncRedis
 from loguru import logger
@@ -160,7 +161,7 @@ class MoveLocalData(object):
         return result
 
 
-async def splitArray(internal: int = 1000, len_list: int = 0):
+async def splitArray(internal: int = 5000, len_list: int = 0):
     area_detail = dict()
     start = 0
     end = -1
@@ -179,6 +180,7 @@ async def splitArray(internal: int = 1000, len_list: int = 0):
 
 async def main():
     try:
+        start_time = time.time()
         fuckdata = MoveLocalData()
         uri_dic = dict(
             host="127.0.0.1",
@@ -201,6 +203,9 @@ async def main():
     except BaseException as e:
         logger.error(e)
         await fuckdata.unlock_key()
+    finally:
+        end_time = time.time()
+        logger.info(f"用时: {(end_time - start_time)}")
 
 
 if __name__ == '__main__':
