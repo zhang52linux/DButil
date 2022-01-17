@@ -19,20 +19,20 @@ from collections import deque
 
 '''
 关于本实验使用lua脚本的原由:
--- Redis服务器会单线程原子性执行Lua脚本，保证Lua脚本在处理的过程中不会被任意其它请求打断
+    - Redis服务器会单线程原子性执行Lua脚本，保证Lua脚本在处理的过程中不会被任意其它请求打断
 使用Lua脚本的好处:
--- 减少网络开销: 可以将多个命令用一个请求完成减少了网络往返时延
--- 原子操作: Redis会将整个脚本作为一个整体执行，中间不会被其他命令插入
--- 复用: 客户端发送的脚本会保存在Redis服务器中，其他客户端可以复用这一脚本(在All Redis Info 中可查看 used_memory_lua)
+    - 减少网络开销: 可以将多个命令用一个请求完成减少了网络往返时延
+    - 原子操作: Redis会将整个脚本作为一个整体执行，中间不会被其他命令插入
+    - 复用: 客户端发送的脚本会保存在Redis服务器中，其他客户端可以复用这一脚本(在All Redis Info 中可查看 used_memory_lua)
 弊端:
--- 无论是redis事务，还是lua脚本，如果执行期间出现运行错误，之前的执行过的命令是不会回滚的也就无法保证原子性
+    - 无论是redis事务，还是lua脚本，如果执行期间出现运行错误，之前的执行过的命令是不会回滚的也就无法保证原子性
 疑问?:
--- 其他客户端如何使用redis服务器上的lua脚本
+    - 其他客户端如何使用redis服务器上的lua脚本
 解答:
--- 通过自定义lua脚本的方式, lua脚本在执行前会进行register_script(script)注册
--- 这个注册过程中，会调用Script类, 这个类会对脚本进行sha1初始化 --> self.sha = hashlib.sha1(script).hexdigest()
--- 然后回调用__call__的魔法方法去执行 --> client.evalsha(self.sha)该脚本, 如果服务器上没有该脚本, 报NoScriptError异常
--- 异常处理中调用script_load(self.sha) <Load a Lua script into the script cache>将脚本加载到缓存, 在执行evalsha
+    - 通过自定义lua脚本的方式, lua脚本在执行前会进行register_script(script)注册
+    - 这个注册过程中，会调用Script类, 这个类会对脚本进行sha1初始化 --> self.sha = hashlib.sha1(script).hexdigest()
+    - 然后回调用__call__的魔法方法去执行 --> client.evalsha(self.sha)该脚本, 如果服务器上没有该脚本, 报NoScriptError异常
+    - 异常处理中调用script_load(self.sha) <Load a Lua script into the script cache>将脚本加载到缓存, 在执行evalsha
 '''
 
 

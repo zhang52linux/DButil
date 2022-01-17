@@ -2,7 +2,11 @@
 from loguru import logger
 import asyncio
 import motor.motor_asyncio
-from pymongo import UpdateOne, database
+from pymongo.operations import DeleteOne, UpdateOne
+from pymongo.database import Database
+from pymongo.collection import Collection
+from pymongo.errors import BulkWriteError
+from pymongo.results import BulkWriteResult
 
 
 class MongoGetter:
@@ -88,9 +92,36 @@ class MongoWriter:
 
 class AsyncMongo:
 
-    def __init__(self, config):
-        self.addr = "mongodb://{username}:{password}@{host}:{port}/{database}".format(**config)
-        self.client: database.Database = motor.motor_asyncio.AsyncIOMotorClient(self.addr)[config["database"]]
+    def __init__(self, url: str = None, host: str = 'localhost', port: int = 27017, database: str = 'admin', username: str = None, password: str = None, **kwargs):
+        if url:
+            self.client = self.get_client(url, **kwargs)
+        else:
+            if password is not None and username is not None:
+                self.client = self.get_client(host=host, port=port, username=username, password=password, authSource=database, **kwargs)
+            else:
+                self.client = self.get_client(host=host, port=port, **kwargs)
+
+        self.db = self.get_database(database)
+
+    def __str__(self) -> str:
+        return f'db: {self.db}'
+
+    # ------------------------------------  ------------------------------------ #
+
+    @staticmethod
+    def get_client(*args, **kwargs):
+        """ Get mongo async client. """
+        return motor.motor_asyncio.AsyncIOMotorClient(*args, **kwargs)
+
+    def get_database(self, database_name: str) -> Database:
+        """ Get database object. """
+        return self.client[database_name]
+
+    def get_collection(self, coll_name: str, **kwargs) -> Collection:
+        """ Get collection object. """
+        return self.db.get_collection(coll_name, **kwargs)
+
+    # ------------------------------------  ------------------------------------ #
 
     def getter(self, collection, body=None, return_fields=None, page_size=1000, retry=5):
         return MongoGetter(self.client, collection, body, return_fields, page_size, retry=retry)
@@ -98,15 +129,26 @@ class AsyncMongo:
     def writer(self, collection, retry=5):
         return MongoWriter(self.client, collection, retry)
 
-    async def find_one(self, coll, filter, retry=3, raise_error=True):
+    async def delete(self, coll_name: str, documents: list([dict]), log_switch: bool = True) -> bool:
+        # 根据_id删除的数据
+        operate_list = [DeleteOne({'_id': i['_id']}) for i in documents if i.get('_id')]
+
+        if not operate_list:
+            logger.warning('documents no _id')
+            return True
+
         try:
-            data = await self.client[coll].find_one(filter)
-            return data
-        except BaseException:
-            if retry:
-                return await self.find_one(coll, filter, retry - 1, raise_error)
-            elif raise_error:
-                raise
+            collect = self.get_collection(coll_name)
+            result: BulkWriteResult = await collect.bulk_write(operate_list, ordered=False)
+            log_switch and logger.info(f'mongo:{collect.full_name} | deleted {result.deleted_count} | total {len(documents)}')
+            return True
+        except BulkWriteError as e:
+            logger.error(e.details)
+            return False
+
+    async def find_one(self, coll_name: str, filter: dict = {}, return_fields: list = None):
+        projection = dict.fromkeys(return_fields, 1) if return_fields else None
+        return await self.get_collection(coll_name).find_one(filter, projection) or {}
 
     async def fetch_all(self, coll, filter, return_fields=None, retry=3, raise_error=True):
         data = []

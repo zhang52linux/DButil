@@ -10,7 +10,7 @@ class BaseMongo:
         password="yafeng",
         database="yafeng_data",
     )
-    mongo = AsyncMongo(uri_dic)
+    mongo = AsyncMongo(**uri_dic)
 
 
 class BaseMongoSpider(BaseMongo):
@@ -21,17 +21,18 @@ class BaseMongoSpider(BaseMongo):
         writer = self.mongo.writer(coll)
         return await writer.write(data)
 
-    async def findOne(self, coll, filter):
-        return await self.mongo.find_one(coll=coll, filter=filter)
+    async def findOne(self, coll_name, filter):
+        return await self.mongo.find_one(coll_name=coll_name, filter=filter)
 
 
 async def updateFileds():
     coll = "dossen_project_data"
     filter = {"dataType": "roomPiceAndRisk", "date": "2022-01-04", "rid": "0759017", "appCode": "ctrip"}
     mongo_writer = BaseMongoSpider()
-    result = await mongo_writer.findOne(coll=coll, filter=filter)
+    result = await mongo_writer.findOne(coll_name=coll, filter=filter)
     result["risk"] = "高风险"
-    await mongo_writer.save2mongo(coll=coll, data=[result])
+    print(result)
+    # await mongo_writer.save2mongo(coll=coll, data=[result])
 
 
 if __name__ == '__main__':
