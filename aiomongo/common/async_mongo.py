@@ -11,8 +11,7 @@ from pymongo.results import BulkWriteResult
 
 class MongoGetter:
 
-    def __init__(self, client, collection, body=None, return_fields=None, page_size=10000, total_size=None,
-                 cursor=None, retry=5):
+    def __init__(self, client, collection, body=None, return_fields=None, page_size=10000, total_size=None, cursor=None, retry=5):
         self.client = client
         self.collection = collection
         self.body = body or {}
@@ -22,14 +21,14 @@ class MongoGetter:
         self.total_size = total_size
         self.fetch_count = 0
         self.buffer = []
-        self.cursor = cursor if cursor else self.client[self.collection].find(self.body, self.return_fields)
+        self.cursor = cursor if cursor else self.client.find(self.body, self.return_fields)
 
     async def get_data(self):
         if self.total_size is None:
             if self.body:
-                self.total_size = await self.client[self.collection].count_documents(self.body)
+                self.total_size = await self.client.count_documents(self.body)
             else:
-                self.total_size = await self.client[self.collection].estimated_document_count()
+                self.total_size = await self.client.estimated_document_count()
         if self.fetch_count >= self.total_size:
             raise StopAsyncIteration
         async for document in self.cursor:
@@ -43,7 +42,7 @@ class MongoGetter:
 
     async def __anext__(self, retry=1):
         try:
-            await self.get_data()  # 调用一次就会往buffer中插入100条记录
+            await self.get_data()  # 调用一次就会往buffer中插入10000条记录
             finished_rate = self.fetch_count / self.total_size if self.total_size else 1
             logger.info("fetch count {} from {}, total count {}, finished {:.5f}%".format(self.fetch_count, self.collection, self.total_size, finished_rate * 100))
             result, self.buffer = self.buffer, []
@@ -79,11 +78,11 @@ class MongoWriter:
         self.total_count += len(documents)
         for i in range(self.retry):
             try:
-                resp = await self.client[self.collection].bulk_write(documents)
+                result: BulkWriteResult = await self.client.bulk_write(documents)
                 self.succ_count += len(documents)
                 logger.success("success write {} documents to {}, total write {}".format(len(documents), self.collection, self.succ_count))
-                return resp.bulk_api_result
-            except BaseException:
+                return result.bulk_api_result
+            except BulkWriteError as e:
                 if i + 1 == self.retry and raise_error:
                     self.fail_count += len(documents)
                     raise
@@ -106,7 +105,7 @@ class AsyncMongo:
     def __str__(self) -> str:
         return f'db: {self.db}'
 
-    # ------------------------------------  ------------------------------------ #
+    # ------------------------------------------------------------------------ #
 
     @staticmethod
     def get_client(*args, **kwargs):
@@ -121,13 +120,13 @@ class AsyncMongo:
         """ Get collection object. """
         return self.db.get_collection(coll_name, **kwargs)
 
-    # ------------------------------------  ------------------------------------ #
+    # ------------------------------------------------------------------------ #
 
     def getter(self, collection, body=None, return_fields=None, page_size=1000, retry=5):
-        return MongoGetter(self.client, collection, body, return_fields, page_size, retry=retry)
+        return MongoGetter(self.get_collection(collection), collection, body, return_fields, page_size, retry=retry)
 
     def writer(self, collection, retry=5):
-        return MongoWriter(self.client, collection, retry)
+        return MongoWriter(self.get_collection(collection), collection, retry)
 
     async def delete(self, coll_name: str, documents: list([dict]), log_switch: bool = True) -> bool:
         # 根据_id删除的数据
@@ -150,9 +149,10 @@ class AsyncMongo:
         projection = dict.fromkeys(return_fields, 1) if return_fields else None
         return await self.get_collection(coll_name).find_one(filter, projection) or {}
 
-    async def fetch_all(self, coll, filter, return_fields=None, retry=3, raise_error=True):
-        data = []
-        cursor = self.client[coll].find(filter, return_fields)
+    async def fetch_all(self, coll_name: str, filter: dict = {}, return_fields: list = None, retry:int = 3, raise_error: bool = True):
+        data = list()
+        projection = dict.fromkeys(return_fields, 1) if return_fields else None
+        cursor = self.get_collection(coll_name).find(filter, projection) or {}
         for i in range(retry):
             try:
                 async for document in cursor:

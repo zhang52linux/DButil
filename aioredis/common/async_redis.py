@@ -3,11 +3,8 @@ import asyncio
 import aioredis
 import random
 import aiohttp
-# aioredis==2.0.0
-# 修改事件循环的策略, <适用window>
-asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())  # 解决设置代理后ssl报错
-# import uvloop  # pip3 install uvloop <速度更快, 适用linux>
-# asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+import uvloop  # pip3 install uvloop <速度更快, 适用linux>
+asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 
 class AsyncRedis(object):

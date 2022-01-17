@@ -1,6 +1,6 @@
+# -*- coding:utf-8 -*-
 import asyncio
 from common.async_mongo import AsyncMongo
-
 
 class BaseMongo:
     uri_dic = dict(
@@ -17,22 +17,21 @@ class BaseMongoSpider(BaseMongo):
     def __init__(self):
         super(BaseMongoSpider, self).__init__()
 
-    async def save2mongo(self, coll, data):
+    async def writer_data(self, coll, data):
         writer = self.mongo.writer(coll)
         return await writer.write(data)
-
-    async def findOne(self, coll_name, filter):
-        return await self.mongo.find_one(coll_name=coll_name, filter=filter)
+    
+    async def reader_data(self, coll_name, filter):
+        return self.mongo.getter(collection=coll_name, body=filter)
 
 
 async def updateFileds():
     coll = "dossen_project_data"
-    filter = {"dataType": "roomPiceAndRisk", "date": "2022-01-04", "rid": "0759017", "appCode": "ctrip"}
+    filter = {"dataType": "roomPiceAndRisk", "rid": "0759017", "appCode": "ctrip"}
     mongo_writer = BaseMongoSpider()
-    result = await mongo_writer.findOne(coll_name=coll, filter=filter)
-    result["risk"] = "高风险"
-    print(result)
-    # await mongo_writer.save2mongo(coll=coll, data=[result])
+    getter = await mongo_writer.reader_data(coll_name=coll, filter=filter)
+    async for docs in getter:
+        await mongo_writer.writer_data(coll=coll, data=docs)
 
 
 if __name__ == '__main__':
