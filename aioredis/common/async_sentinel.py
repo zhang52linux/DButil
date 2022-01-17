@@ -3,7 +3,18 @@ import asyncio
 import aioredis.sentinel
 import feapson
 
-# 既是socket连接超时，也是socket读/写超时
+
+'''
+基于主从复制原理实现:
+    - 好处:
+        - 数据冗余, 实现同一个字段在多个数据库中存在
+        - 负载均衡, 主从复制实现了读写分离
+        - 故障恢复, 主节点挂掉后，从节点补上
+    - 相关命令:
+        - slaveof host port, 修改当前服务器的主服务器, 并丢弃原来的数据集, 开始复制新的主的数据
+        - slaveof no one, 使当前服务器成为主服务器<从原来的集群中脱离>, 不会丢弃原来的数据集, 如果原来的主节点没有宕机, 则该节点还是会变成从节点<回到原来的集群>
+        - 如果有哨兵的存在, 那么当一个主节点坏掉后, slaveof no one 是不会真正起到作用的<不久就会被同步到新的主节点上>
+'''
 
 
 class AsyncRedisSentinelHelper():

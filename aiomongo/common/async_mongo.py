@@ -116,7 +116,6 @@ class AsyncMongo:
 
     async def fetch_all(self, coll, filter, return_fields=None, retry=3, raise_error=True):
         data = []
-        # $in 查询时需要一个数组
         cursor = self.client[coll].find(filter, return_fields)
         for i in range(retry):
             try:
