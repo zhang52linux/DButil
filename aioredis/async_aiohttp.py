@@ -35,13 +35,18 @@ vrrp应用:
 - keepalived
 '''
 
+'''
+@wraps(func):
+    - wraps这个修饰器的作用了吧，就是将 被修饰的函数(run) 的一些属性值赋值给 修饰器函数(safe_function)
+'''
+
 
 class FuckCfCookie:
     pass_count = 0
 
     def start(self):
         self.total_retry_count = 0
-        self.total_count = 1000
+        self.total_count = 100
         asyncio.run(self.main())
 
     # 装饰器做安全函数
@@ -70,7 +75,7 @@ class FuckCfCookie:
 
     async def main(self):
         start_time = time.time()
-        timeout = aiohttp.ClientTimeout(total=1)
+        timeout = aiohttp.ClientTimeout(total=3)
         async with aiohttp.ClientSession() as session:
             for _ in range(self.total_count):
                 await self.run(session, timeout)

@@ -1,17 +1,14 @@
 # -*- coding:utf-8 -*-
-import logging
+from loguru import logger
 import asyncio
 import motor.motor_asyncio
 from pymongo import UpdateOne, database
 
 
-root_logger = logging.getLogger()
-
-
 class MongoGetter:
 
     def __init__(self, client, collection, body=None, return_fields=None, page_size=10000, total_size=None,
-                 cursor=None, retry=5, logger=root_logger):
+                 cursor=None, retry=5):
         self.client = client
         self.collection = collection
         self.body = body or {}
@@ -21,7 +18,6 @@ class MongoGetter:
         self.total_size = total_size
         self.fetch_count = 0
         self.buffer = []
-        self.logger = logger
         self.cursor = cursor if cursor else self.client[self.collection].find(self.body, self.return_fields)
 
     async def get_data(self):
@@ -45,7 +41,7 @@ class MongoGetter:
         try:
             await self.get_data()  # 调用一次就会往buffer中插入100条记录
             finished_rate = self.fetch_count / self.total_size if self.total_size else 1
-            self.logger.info("fetch count {} from {}, total count {}, finished {:.5f}%".format(self.fetch_count, self.collection, self.total_size, finished_rate * 100))
+            logger.info("fetch count {} from {}, total count {}, finished {:.5f}%".format(self.fetch_count, self.collection, self.total_size, finished_rate * 100))
             result, self.buffer = self.buffer, []
             return result
         except StopAsyncIteration:
@@ -60,11 +56,10 @@ class MongoGetter:
 
 class MongoWriter:
 
-    def __init__(self, client, collection, retry=5, logger=root_logger):
+    def __init__(self, client, collection, retry=5):
         self.client = client
         self.collection = collection
         self.retry = retry
-        self.logger = logger
         self.total_count = 0
         self.succ_count = 0
         self.fail_count = 0
@@ -82,7 +77,7 @@ class MongoWriter:
             try:
                 resp = await self.client[self.collection].bulk_write(documents)
                 self.succ_count += len(documents)
-                self.logger.info("success write {} documents to {}, total write {}".format(len(documents), self.collection, self.succ_count))
+                logger.success("success write {} documents to {}, total write {}".format(len(documents), self.collection, self.succ_count))
                 return resp.bulk_api_result
             except BaseException:
                 if i + 1 == self.retry and raise_error:
@@ -93,16 +88,15 @@ class MongoWriter:
 
 class AsyncMongo:
 
-    def __init__(self, config, logger=root_logger):
+    def __init__(self, config):
         self.addr = "mongodb://{username}:{password}@{host}:{port}/{database}".format(**config)
         self.client: database.Database = motor.motor_asyncio.AsyncIOMotorClient(self.addr)[config["database"]]
-        self.logger = logger
 
     def getter(self, collection, body=None, return_fields=None, page_size=1000, retry=5):
-        return MongoGetter(self.client, collection, body, return_fields, page_size, retry=retry, logger=self.logger)
+        return MongoGetter(self.client, collection, body, return_fields, page_size, retry=retry)
 
     def writer(self, collection, retry=5):
-        return MongoWriter(self.client, collection, retry, self.logger)
+        return MongoWriter(self.client, collection, retry)
 
     async def find_one(self, coll, filter, retry=3, raise_error=True):
         try:
