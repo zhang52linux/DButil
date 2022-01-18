@@ -1,6 +1,8 @@
 # -*- coding:utf-8 -*-
 from loguru import logger
 import asyncio
+import uvloop
+asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 import pymongo
 import motor.motor_asyncio
 from pymongo.operations import DeleteOne, UpdateOne
@@ -14,7 +16,7 @@ from .safe_function import retry_if_exception
 
 class MongoGetter:
 
-    def __init__(self, client, collection, body=None, return_fields=None, page_size=10000, total_size=None, cursor=None, retry=5):
+    def __init__(self, client, collection, body: dict = None, return_fields: dict = None, page_size: int = 10000, batch_size: int = 10000, total_size: int = None, cursor=None, retry=5):
         self.client = client
         self.collection = collection
         self.body = body or {}
@@ -24,7 +26,7 @@ class MongoGetter:
         self.total_size = total_size
         self.fetch_count = 0
         self.buffer = []
-        self.cursor = cursor if cursor else self.client.find(self.body, self.return_fields).batch_size(page_size)
+        self.cursor = cursor if cursor else self.client.find(self.body, self.return_fields).batch_size(batch_size)
 
     async def get_data(self):
         if self.total_size is None:
@@ -78,7 +80,7 @@ class MongoWriter:
         self.total_count += len(documents)
         for i in range(self.retry):
             try:
-                result: BulkWriteResult = await self.client.bulk_write(documents)
+                result: BulkWriteResult = await self.client.bulk_write(documents, ordered=False)
                 self.succ_count += len(documents)
                 logger.success("success write {} documents to {}, total write {}".format(len(documents), self.collection, self.succ_count))
                 return result.bulk_api_result
@@ -149,8 +151,8 @@ class AsyncMongo:
 
     # ------------------------------------ CRUD ------------------------------------ #
 
-    def getter(self, collection, body=None, return_fields=None, page_size=1000, retry=5):
-        return MongoGetter(self.get_collection(collection), collection, body, return_fields, page_size, retry=retry)
+    def getter(self, collection, body=None, return_fields=None, retry=5):
+        return MongoGetter(self.get_collection(collection), collection, body, return_fields, retry=retry)
 
     def writer(self, collection, retry=5):
         return MongoWriter(self.get_collection(collection), collection, retry)

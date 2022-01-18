@@ -1,6 +1,8 @@
 # -*- coding:utf-8 -*-
 import asyncio
-from asyncio.log import logger
+import uvloop
+asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+
 from common.async_mongo import AsyncMongo
 
 
@@ -32,19 +34,13 @@ class BaseMongoSpider(BaseMongo):
 
 async def updateFileds():
     coll = "dossen_project_bussiness_data"
-    filter = {"dataType": "bussiness", "appCode": "meituan", "dossenId": "0772076"}
+    filter = {"dataType": "bussiness", "appCode": "meituan"}
     mongo_writer = BaseMongoSpider()
     import time
     start_time = time.time()
     getter = await mongo_writer.reader_data(coll_name=coll, filter=filter)
     async for docs in getter:
-        # logger.info("-------------------------------------")
         await mongo_writer.writer_data(coll=coll, data=docs)
-    end_time = time.time()
-    print(end_time - start_time)
-
-    start_time = time.time()
-    result = await mongo_writer.find_all(coll_name=coll, filter=filter)
     end_time = time.time()
     print(end_time - start_time)
 
