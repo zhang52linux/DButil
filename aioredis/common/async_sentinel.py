@@ -9,7 +9,7 @@ import feapson
     - 好处:
         - 数据冗余, 实现同一个字段在多个数据库中存在
         - 负载均衡, 主从复制实现了读写分离
-        - 故障恢复, 主节点挂掉后，从节点补上
+        - 故障恢复, 主节点挂掉后, 从节点补上
     - 相关命令:
         - slaveof host port, 修改当前服务器的主服务器, 并丢弃原来的数据集, 开始复制新的主的数据
         - slaveof no one, 使当前服务器成为主服务器<从原来的集群中脱离>, 不会丢弃原来的数据集, 如果原来的主节点没有宕机, 则该节点还是会变成从节点<回到原来的集群>
@@ -119,7 +119,7 @@ class AsyncRedisSentinelHelper():
 async def main():
     # redis info
     uri_dic = dict(
-        sentinel_list=[('47.107.93.106', 36379), ('47.107.93.106', 36380), ('47.107.93.106', 36381)],
+        sentinel_list=[('1.15.237.25', 36379), ('1.15.237.25', 36380), ('1.15.237.25', 36381)],
         password="vnLxIZuYgx2BOMIWGWBK5DRfYEfr!fCP",
         service_name='mymaster',
         db=0
@@ -127,7 +127,7 @@ async def main():
     # create redis link
     rsh = AsyncRedisSentinelHelper(uri_dic)
     # test
-    result = await rsh.read_blpop_data("queue:rq")
+    result = await rsh.rpush_data("test", [520, 13, 14])
     print(result)
 
 
