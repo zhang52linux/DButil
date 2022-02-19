@@ -21,22 +21,22 @@ warnings.filterwarnings('ignore')
 
 '''
 vrrp概念:
-- VRRP(Virtual Router Redundancy Protocol，虚拟路由器冗余协议)
+- VRRP(Virtual Router Redundancy Protocol, 虚拟路由器冗余协议)
 vrrp作用:
-- 将可以承担网关功能的一组路由器加入到备份组中，形成一台虚拟路由器，这样主机的网关设置成虚拟网关，就能够实现冗余
+- 将可以承担网关功能的一组路由器加入到备份组中, 形成一台虚拟路由器, 这样主机的网关设置成虚拟网关, 就能够实现冗余
 - 备份组: 局域网内(各es实例的私网IP)的一组路由器(相当于阿里云的高可用虚拟IP绑定两个个ecs实例<最多两个>)
 vrrp原理:
 - 功能上相当于一台虚拟路由器
-- 虚拟路由器具有IP地址，称为虚拟IP地址
+- 虚拟路由器具有IP地址, 称为虚拟IP地址
 - 网络内的主机通过这个虚拟路由器与外部网络(相当于阿里云的弹性公网IP)进行通信
-- 路由器根据优先级，选举出Master路由器，承担网关功能
+- 路由器根据优先级, 选举出Master路由器, 承担网关功能
 vrrp应用:
 - keepalived
 '''
 
 '''
 @wraps(func):
-    - wraps这个修饰器的作用了吧，就是将 被修饰的函数(run) 的一些属性值赋值给 修饰器函数(safe_function)
+    - wraps这个修饰器的作用了吧, 就是将 被修饰的函数(run) 的一些属性值赋值给 修饰器函数(safe_function)
 '''
 
 
