@@ -7,6 +7,7 @@ LastEditors: zhangsanyong
 LastEditTime: 2022-01-06 15:06:29
 Description: nohup python -u "/home/ubuntu/tornado/DButil/aioredis/async_playwright.py" > /home/ubuntu/logs/supervisor/playwright_server/tornado_playwright_server.log 2>&1 &
 nohup python -u "/home/ubuntu/cloudflareSpider/cloudflareSpider/spiders/start.py" > /home/ubuntu/logs/supervisor/cloudflare_spider/monitor_cloudflare.log 2>&1 &
+下载子模块: git submodule update --init --recursive
 *=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 """
 import datetime
@@ -26,7 +27,7 @@ class BrowserLoginExcutor:
         super().__init__()
         # redis info
         uri_dic = dict(
-            sentinel_list=[('47.107.93.106', 36379), ('47.107.93.106', 36380), ('47.107.93.106', 36381)],
+            sentinel_list=[('1.15.237.25', 36379), ('1.15.237.25', 36380), ('1.15.237.25', 36381)],
             password="vnLxIZuYgx2BOMIWGWBK5DRfYEfr!fCP",
             service_name='mymaster',
             db=0
