@@ -5,7 +5,6 @@ Author: zhangsanyong
 Date: 2022-01-06 15:06:28
 LastEditors: zhangsanyong
 LastEditTime: 2022-01-06 15:06:29
-FilePath: /tornado/DButil/aioredis/async_cookie.py
 Description: 请求获取cf5s盾的cookie(git rm -rf --cached aioredis/async_cookie.py)
 *=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 """

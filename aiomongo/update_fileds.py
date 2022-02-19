@@ -34,16 +34,16 @@ class BaseMongoSpider(BaseMongo):
 
 async def updateFileds():
     coll = "dossen_project_bussiness_data"
-    filter = {"dataType": "bussiness", "appCode": "meituan"}
+    filter = {"dataType": "operating"}
     mongo_writer = BaseMongoSpider()
-    import time
-    start_time = time.time()
     getter = await mongo_writer.reader_data(coll_name=coll, filter=filter)
     async for docs in getter:
-        await mongo_writer.writer_data(coll=coll, data=docs)
-    end_time = time.time()
-    print(end_time - start_time)
-
+        deal_docs = []
+        for doc in docs:
+            if 'competingHotels' not in doc:
+                doc["competingHotels"] = []
+            deal_docs.append(doc)
+        await mongo_writer.writer_data(coll=coll, data=deal_docs)
 
 if __name__ == '__main__':
     loop = asyncio.get_event_loop()
