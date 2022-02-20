@@ -7,7 +7,6 @@ LastEditors: zhangsanyong
 LastEditTime: 2022-01-06 15:06:29
 Description: nohup python -u "/home/ubuntu/tornado/DButil/aioredis/async_playwright.py" > /home/ubuntu/logs/supervisor/playwright_server/tornado_playwright_server.log 2>&1 &
 nohup python -u "/home/ubuntu/cloudflareSpider/cloudflareSpider/spiders/start.py" > /home/ubuntu/logs/supervisor/cloudflare_spider/monitor_cloudflare.log 2>&1 &
-下载子模块: git submodule update --init --recursive
 *=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 """
 import datetime
