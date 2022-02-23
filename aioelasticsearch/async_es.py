@@ -94,9 +94,6 @@ class ESWriter:
     async def write(self, documents=None, timeout=None, raise_error=True):
         if not documents:
             return (0, [])
-        for doc in documents:
-            if "id" not in doc:
-                print("not id")
         body = self.es.gen_bulk_body(documents, self.index, self.doc_type, self.action)
         self.total_count += len(documents)
         for i in range(self.retry):
