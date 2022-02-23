@@ -33,15 +33,16 @@ class BaseMongoSpider(BaseMongo):
 
 
 async def updateFileds():
-    coll = "dossen_project_bussiness_data"
-    filter = {"dataType": "operating"}
+    coll = "dossen_project_data"
+    filter = {"dataType": "room", "date": {'$gte': "2021-12-01", '$lte': "2022-02-20"}, "appCode": "ctrip", "rid": "2431001"}
     mongo_writer = BaseMongoSpider()
     getter = await mongo_writer.reader_data(coll_name=coll, filter=filter)
     async for docs in getter:
         deal_docs = []
         for doc in docs:
-            if 'competingHotels' not in doc:
-                doc["competingHotels"] = []
+            for it in doc['data']:
+                if it['pmsRoomTypeId'] == "JT":
+                    it['pmsRoomTypeId'] = "JTF"
             deal_docs.append(doc)
         await mongo_writer.writer_data(coll=coll, data=deal_docs)
 
