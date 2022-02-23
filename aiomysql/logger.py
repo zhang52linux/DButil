@@ -16,7 +16,7 @@ from logging.handlers import RotatingFileHandler
 class LoggerManager(object):
     loggers = dict()
     fmt = '[%(asctime)s|%(name)s|%(filename)s|LN%(lineno)d] %(levelname)s %(message)s'
-    path = os.path.dirname(os.path.dirname(__file__))
+    path = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
     log_dir = os.path.join(path, "logs")
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
