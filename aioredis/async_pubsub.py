@@ -23,9 +23,9 @@ async def reader(channel: aioredis.client.PubSub):
 
 async def main():
     uri_dic = dict(
-        host="82.157.144.118",
-        password="vnLxIZuYgx2BOMIWGWBK5DRfYEfr!fCP",
-        port=31568,
+        host="xx.xx.xx.xx",
+        password="xxxxxxxx",
+        port=3306,
         db=0
     )
     redis_pool = AsyncRedis(uri_dic)

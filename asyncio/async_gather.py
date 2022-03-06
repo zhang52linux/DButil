@@ -1,4 +1,15 @@
+# _*_ coding:utf-8 _*_
+"""
+*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+Author: zhangsanyong
+Date: 2022-03-05 16:06:28
+LastEditors: zhangsanyong
+LastEditTime: 2022-03-05 16:06:28
+Description: asyncio的gather与顺序执行的速度差异比较
+*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+"""
 import asyncio
+
 
 async def factorial(name, number):
     f = 1
@@ -8,6 +19,7 @@ async def factorial(name, number):
         f *= i
     print(f"Task {name}: factorial({number}) = {f}")
     return f
+
 
 async def main():
     # Schedule three calls *concurrently*:

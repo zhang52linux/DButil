@@ -114,22 +114,3 @@ class AsyncRedisSentinelHelper():
         async with self.slave.pipeline(transaction=True) as pipe:
             ok1 = await (pipe.blpop(key, timeout=timeout).execute())
         return ok1
-
-
-async def main():
-    # redis info
-    uri_dic = dict(
-        sentinel_list=[('1.15.237.25', 36379), ('1.15.237.25', 36380), ('1.15.237.25', 36381)],
-        password="vnLxIZuYgx2BOMIWGWBK5DRfYEfr!fCP",
-        service_name='mymaster',
-        db=0
-    )
-    # create redis link
-    rsh = AsyncRedisSentinelHelper(uri_dic)
-    # test
-    result = await rsh.rpush_data("test", [520, 13, 14])
-    print(result)
-
-
-if __name__ == '__main__':
-    asyncio.run(main())

@@ -97,7 +97,7 @@ class FuckCfCookie:
     @staticmethod
     async def get_cf_cookie():
         async with aiohttp.ClientSession() as session:
-            async with session.get("http://120.53.247.246/learnowo/cloudflare") as resp:
+            async with session.get("http://xx.xx.xx.xx/learnowo/cloudflare") as resp:
                 result = await resp.json()
                 return result
 

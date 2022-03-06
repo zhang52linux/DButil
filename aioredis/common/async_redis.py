@@ -39,33 +39,3 @@ class AsyncRedis(object):
 
     async def client(self, db=None) -> aioredis.Redis:
         return await self.get_async_redis_client_pool(self.default_db if db is None else db)
-
-
-async def get_Asyncproxy():
-    uri_dic = dict(
-        host="8.135.50.150",
-        port=22222,
-        db=0
-    )
-    redis_pool = AsyncRedis(uri_dic)
-    client = await redis_pool.client()
-    res = await client.hgetall("idata_proxy_pool")
-    proxy_list = list(map(lambda key: key.split('|')[0], res.values()))
-    proxyHost = random.choice(proxy_list)
-    proxyPort = "8000"
-    proxyUser = "proxy"
-    proxyPass = "12qwaszx"
-    proxyMeta = "http://%(user)s:%(pass)s@%(host)s:%(port)s" % {"host": proxyHost, "port": proxyPort, "user": proxyUser, "pass": proxyPass}
-    return proxyMeta
-
-
-async def main():
-    proxy = await get_Asyncproxy()
-    print(proxy)
-    conn = aiohttp.TCPConnector(ssl=False)  # 防止ssl报错
-    async with aiohttp.ClientSession(connector=conn, trust_env=True) as session:
-        async with session.get('https://httpbin.org/ip', proxy=proxy) as response:
-            print(await response.text())
-
-if __name__ == "__main__":
-    asyncio.run(main())

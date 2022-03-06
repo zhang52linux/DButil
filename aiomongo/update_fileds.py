@@ -9,11 +9,11 @@ from common.async_mongo import AsyncMongo
 
 class BaseMongo:
     uri_dic = dict(
-        host="47.106.82.140",
-        port=55555,
-        username="yafeng",
-        password="yafeng",
-        database="yafeng_data",
+        host="xx.xx.xx.xx",
+        port=27042,
+        username="xxx",
+        password="xxx",
+        database="xxx",
     )
     mongo = AsyncMongo(**uri_dic)
 

@@ -32,8 +32,8 @@ class semaphoreTest(object):
         super().__init__()
         # redis info
         uri_dic = dict(
-            sentinel_list=[('47.107.93.106', 36379), ('47.107.93.106', 36380), ('47.107.93.106', 36381)],
-            password="vnLxIZuYgx2BOMIWGWBK5DRfYEfr!fCP",
+            sentinel_list=[('xx.xx.xx.xx', 6379), ('xx.xx.xx.xx', 6379), ('xx.xx.xx.xx', 6379)],
+            password="password",
             service_name='mymaster',
             db=0
         )
