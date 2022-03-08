@@ -27,7 +27,7 @@ asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 import time
 async def test(timeout=1):
     async with aiohttp.ClientSession() as session:
-        async with session.get("http://118.190.217.176/learnowo/cloudflare") as resp:
+        async with session.get("http://xxx.xxx.xxx.xxxx/learnowo/cloudflare") as resp:
             resp = await resp.text() # 每个网络请求都有响应时间,响应得快的先取出来，慢的继续在事件循环中
             print(resp)
             await asyncio.sleep(timeout) # asyncio.sleep事件循环没有停, 而<time.sleep(timeout)会暂停整个线程>

@@ -6,7 +6,7 @@ Date: 2022-01-06 15:06:28
 LastEditors: zhangsanyong
 LastEditTime: 2022-01-06 15:06:29
 FilePath: /tornado/DButil/aioredis/async_blacksheep.py
-Description: 
+Description:
 *=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
 """
 
@@ -19,7 +19,7 @@ from loguru import logger
 
 async def client_example():
     async with ClientSession() as client:
-        response = await client.get("http://118.190.217.176/learnowo/cloudflare")
+        response = await client.get("http://xxxxx.xxxxx.xxxxx.xxxxx/learnowo/cloudflare")
 
         assert response is not None
         text = await response.text()

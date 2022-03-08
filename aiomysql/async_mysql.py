@@ -22,7 +22,6 @@ class AsyncMysqlClient(object):
         self.connection = None
 
     async def get_client(self):
-
         self.connection = await self.pool.acquire()
         return self.connection
 

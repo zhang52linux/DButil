@@ -10,7 +10,7 @@ from common.async_mongo import AsyncMongo
 class BaseMongo:
     uri_dic = dict(
         host="xx.xx.xx.xx",
-        port=27042,
+        port=00000,
         username="xxx",
         password="xxx",
         database="xxx",

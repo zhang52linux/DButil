@@ -10,13 +10,13 @@ asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())  # è§£å†
 
 
 async def get_Asyncproxy():
-    redis = aioredis.from_url("redis://8.135.50.150:22222", db=0)
-    res = await redis.hgetall("idata_proxy_pool")
+    redis = aioredis.from_url("redis://xx.xx.xx.xx:xxxx", db=0)
+    res = await redis.hgetall("xxxxx")
     proxy_list = list(map(lambda key: key.decode("utf-8").split('|')[0], res.values()))
     proxyHost = random.choice(proxy_list)
-    proxyPort = "8000"
-    proxyUser = "proxy"
-    proxyPass = "12qwaszx"
+    proxyPort = "xxxx"
+    proxyUser = "xxxx"
+    proxyPass = "xxxxx"
     proxyMeta = "http://%(user)s:%(pass)s@%(host)s:%(port)s" % {"host": proxyHost, "port": proxyPort, "user": proxyUser, "pass": proxyPass}
     return proxyMeta
 

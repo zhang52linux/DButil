@@ -41,7 +41,7 @@ class FuckCfCookie:
                 "User-Agent": result["ua"],
                 "cookie": result["cookie"]
             }
-            proxy = "http://proxy:12qwaszx@{}:8000".format(result["ip"])
+            proxy = "http://xxxx:xxxxxxxxx@{}:8000".format(result["ip"])
             async with session.get("https://steamdb.info/", headers=headers, proxy=proxy, timeout=timeout) as resp:
                 assert resp.status == 200
                 logger.info(resp.status)

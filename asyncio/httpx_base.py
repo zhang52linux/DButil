@@ -9,7 +9,7 @@ import aioredis
 
 
 async def get_proxy():
-    redis = aioredis.from_url("redis://8.135.50.150:22222", db=0)
+    redis = aioredis.from_url("redis://xxxx.xxxx.xxx.xxxx:xxxxx", db=0)
     res = await redis.hgetall("idata_proxy_pool")
     data_list = list(map(lambda key: key.decode("utf-8").split('|')[0], res.values()))
     return random.choice(data_list)
