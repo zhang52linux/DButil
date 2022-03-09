@@ -51,6 +51,28 @@ class AsyncMysqlClient(object):
             await self.cursor.close()
         await self.free_connection()
 
+    async def create_table(self, sql, retry=3, raise_error=True):
+        for i in range(retry):
+            try:
+                await self.cursor.execute(sql)
+                return await self.cursor.fetchone()
+            except BaseException:
+                self.logger.error("retry: {}, sql: {}\n{}".format(i, sql, traceback.format_exc()))
+                if i + 1 == retry:
+                    if raise_error:
+                        raise
+
+    async def insert_table(self, sql, retry=3, raise_error=True):
+        for i in range(retry):
+            try:
+                await self.cursor.execute(sql)
+                return await self.cursor.fetchone()
+            except BaseException:
+                self.logger.error("retry: {}, sql: {}\n{}".format(i, sql, traceback.format_exc()))
+                if i + 1 == retry:
+                    if raise_error:
+                        raise
+
     async def fetch_one(self, sql, retry=3, raise_error=True):
         for i in range(retry):
             try:
