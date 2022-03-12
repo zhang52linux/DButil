@@ -1,4 +1,4 @@
-# -*- coding:utf-8 -*-
+# _*_ coding:utf-8 _*_
 from loguru import logger
 import asyncio
 import uvloop

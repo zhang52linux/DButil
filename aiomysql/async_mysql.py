@@ -1,12 +1,4 @@
-# -*- coding:utf-8 -*-
-"""
-*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
-Author: liyafeng
-File Name: async_mysql.py
-Create Date: 2021/2/20 15:00
-Description:
-*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
-"""
+# _*_ coding:utf-8 _*_
 import asyncio
 import traceback
 import aiomysql

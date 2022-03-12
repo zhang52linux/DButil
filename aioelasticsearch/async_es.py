@@ -1,12 +1,4 @@
-# -*- coding:utf-8 -*-
-"""
-*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
-Author: liyafeng
-File Name: async_es.py
-Create Date: 2021/3/4 13:26
-Description:
-*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
-"""
+# _*_ coding:utf-8 _*_
 import time
 import json
 import asyncio

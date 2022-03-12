@@ -1,12 +1,4 @@
-# -*- coding:utf-8 -*-
-"""
-*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
-Author: liyafeng
-File Name: logger.py
-Create Date: 2020/9/26 12:02
-Description:
-*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
-"""
+# _*_ coding:utf-8 _*_
 import os
 import sys
 import logging
