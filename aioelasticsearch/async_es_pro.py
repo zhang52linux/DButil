@@ -7,40 +7,40 @@ from .logger import logger_manager
 from elasticsearch import AsyncElasticsearch
 from elasticsearch.exceptions import ConnectionError, ConnectionTimeout
 root_logger = logger_manager.get_logger()
-# 基于scroll id 做的查询，适合深度查询，查询会创建scroll context ,有状态, 默认500个，超过后悔报错, 深度查询推荐search after
+# 基于search after 做的查询，官方推荐，适合深度查询，滑动分页查询，无状态
 
 class ESGetter:
 
-    def __init__(self, es, index, doc_type=None, body=None, scroll="3m", retry=5, logger=root_logger):
+    def __init__(self, es, index, doc_type=None, body=None, retry=5, logger=root_logger):
         self.es = es
         self.index = index
         self.doc_type = doc_type
         self.body = body
-        self.scroll = scroll
         self.retry = retry
         self.logger = logger
-        self.sc_id = None
+        self.src_id = None
         self.total_size = None
         self.fetch_count = 0
 
     async def get_data(self):
         if self.total_size is None:
-            result = await self.es.client.search(index=self.index, doc_type=self.doc_type, body=self.body, scroll=self.scroll)
+            result = await self.es.client.search(index=self.index, doc_type=self.doc_type, body=self.body)
             self.total_size = result['hits']['total']['value']
             if self.total_size == 0:
                 await self.es.client.close()
                 raise StopAsyncIteration
-        elif self.fetch_count >= self.total_size or self.sc_id is None:
+        elif self.fetch_count >= self.total_size:
             await self.es.client.close()
             raise StopAsyncIteration
         else:
-            result = await self.es.client.scroll(scroll_id=self.sc_id, scroll=self.scroll)
+            self.body["search_after"] = self.src_id
+            result = await self.es.client.search(index=self.index, doc_type=self.doc_type, body=self.body)
         if not len(result['hits']['hits']):
             self.logger.info("the fetch count {} is inconsistent with the total count {}".format(self.fetch_count, self.total_size))
             await self.es.client.close()
             raise StopAsyncIteration
         self.fetch_count += len(result['hits']['hits'])
-        self.sc_id = result.get("_scroll_id")
+        self.src_id = result['hits']['hits'][-1]["sort"]
         return result['hits']['hits']
 
     def __aiter__(self):
@@ -116,8 +116,8 @@ class Elasticsearch:
     def reconnect(self):
         self.client = AsyncElasticsearch(hosts=self.hosts, timeout=30, headers=self.headers)
 
-    def getter(self, index, doc_type=None, body=None, scroll="3m", retry=5):
-        return ESGetter(self, index, doc_type=doc_type, body=body, scroll=scroll, retry=retry, logger=self.logger)
+    def getter(self, index, doc_type=None, body=None, retry=5):
+        return ESGetter(self, index, doc_type=doc_type, body=body, retry=retry, logger=self.logger)
 
     def writer(self, index, doc_type=None, action="index", retry=5):
         return ESWriter(self, index, doc_type=doc_type, action=action, retry=retry, logger=self.logger)
