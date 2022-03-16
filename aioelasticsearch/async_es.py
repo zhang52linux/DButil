@@ -3,22 +3,20 @@ import time
 import json
 import asyncio
 import traceback
-from .logger import logger_manager
+from loguru import logger
 from elasticsearch import AsyncElasticsearch
 from elasticsearch.exceptions import ConnectionError, ConnectionTimeout
-root_logger = logger_manager.get_logger()
 # 基于scroll id 做的查询，适合深度查询，查询会创建scroll context ,有状态, 默认500个，超过后悔报错, 深度查询推荐search after
 
 class ESGetter:
 
-    def __init__(self, es, index, doc_type=None, body=None, scroll="3m", retry=5, logger=root_logger):
+    def __init__(self, es, index, doc_type=None, body=None, scroll="3m", retry=5):
         self.es = es
         self.index = index
         self.doc_type = doc_type
         self.body = body
         self.scroll = scroll
         self.retry = retry
-        self.logger = logger
         self.sc_id = None
         self.total_size = None
         self.fetch_count = 0
@@ -36,7 +34,7 @@ class ESGetter:
         else:
             result = await self.es.client.scroll(scroll_id=self.sc_id, scroll=self.scroll)
         if not len(result['hits']['hits']):
-            self.logger.info("the fetch count {} is inconsistent with the total count {}".format(self.fetch_count, self.total_size))
+            logger.info("the fetch count {} is inconsistent with the total count {}".format(self.fetch_count, self.total_size))
             await self.es.client.close()
             raise StopAsyncIteration
         self.fetch_count += len(result['hits']['hits'])
@@ -51,7 +49,7 @@ class ESGetter:
             st = time.time()
             result = await self.get_data()
             finished_rate = self.fetch_count / self.total_size if self.total_size else 1
-            self.logger.info("fetch count {} from {}, total count {}, finished {:.5f}%, use time: {}".format(self.fetch_count, self.index, self.total_size, finished_rate * 100, round(time.time() - st, 3)))
+            logger.info("fetch count {} from {}, total count {}, finished {:.5f}%, use time: {}".format(self.fetch_count, self.index, self.total_size, finished_rate * 100, round(time.time() - st, 3)))
             return result
         except StopAsyncIteration:
             await self.es.client.close()
@@ -68,7 +66,7 @@ class ESGetter:
 
 class ESWriter:
 
-    def __init__(self, es, index, doc_type=None, action="index", timeout=30, retry=5, logger=root_logger):
+    def __init__(self, es, index, doc_type=None, action="index", timeout=30, retry=5):
         """
         action: index/create/update/delete
         """
@@ -77,7 +75,6 @@ class ESWriter:
         self.doc_type = doc_type
         self.action = action
         self.retry = retry
-        self.logger = logger
         self.timeout = timeout
         self.total_count = 0
         self.succ_count = 0
@@ -94,7 +91,7 @@ class ESWriter:
                 resp = await self.es.async_bulk(body, timeout or self.timeout, raise_error)
                 self.succ_count += resp["success"]
                 self.fail_count += resp["fail"]
-                self.logger.info("write success count {}, total saved {}, successed {}, use time: {}".format(resp["success"], self.total_count, self.succ_count, round(time.time() - st, 3)))
+                logger.info("write success count {}, total saved {}, successed {}, use time: {}".format(resp["success"], self.total_count, self.succ_count, round(time.time() - st, 3)))
                 return resp
             except Exception:
                 if not await self.es.client.ping():
@@ -107,20 +104,19 @@ class ESWriter:
 
 class Elasticsearch:
 
-    def __init__(self, hosts, headers=None, logger=root_logger):
+    def __init__(self, hosts, headers=None):
         self.hosts = hosts
         self.headers = headers
-        self.logger = logger
         self.client = AsyncElasticsearch(hosts=hosts, timeout=30, headers=headers)
 
     def reconnect(self):
         self.client = AsyncElasticsearch(hosts=self.hosts, timeout=30, headers=self.headers)
 
     def getter(self, index, doc_type=None, body=None, scroll="3m", retry=5):
-        return ESGetter(self, index, doc_type=doc_type, body=body, scroll=scroll, retry=retry, logger=self.logger)
+        return ESGetter(self, index, doc_type=doc_type, body=body, scroll=scroll, retry=retry)
 
     def writer(self, index, doc_type=None, action="index", retry=5):
-        return ESWriter(self, index, doc_type=doc_type, action=action, retry=retry, logger=self.logger)
+        return ESWriter(self, index, doc_type=doc_type, action=action, retry=retry)
 
     async def exists(self, ids, index, doc_type=None):
         resp = await asyncio.gather(*[self.client.exists(index, _id, doc_type=doc_type) for _id in ids])
@@ -149,7 +145,7 @@ class Elasticsearch:
                     for k, v in item.items():
                         if "error" in v:
                             if raise_error:
-                                self.logger.error(json.dumps(v["error"]))
+                                logger.error(json.dumps(v["error"]))
                             fail += 1
                         else:
                             success += 1
@@ -174,4 +170,4 @@ class Elasticsearch:
                 await self.client.close()
                 raise
             else:
-                self.logger.error(traceback.format_exc())
+                logger.error(traceback.format_exc())

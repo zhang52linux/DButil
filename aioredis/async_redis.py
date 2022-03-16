@@ -23,6 +23,44 @@ class AsyncRedis(object):
             db=config["db"]
         )
         self.client_map = {}
+        self.init_scripts()
+    
+    def init_scripts(self, script_dir=None):
+        """ 加载所有lua脚本 默认从scripts目录下获取 """
+        self._scripts = {}
+        script_dir = script_dir or os.path.join(os.path.dirname(__file__), 'scripts')
+        for file_path in glob.glob(os.path.join(script_dir, '*.lua')):
+            with open(file_path, 'r') as f:
+                script_obj = self.register_script(f.read())
+                script_name = os.path.splitext(os.path.basename(file_path))[0]
+                self._scripts[script_name] = script_obj
+
+    async def run_script(self, script_name, keys=None, args=None):
+        """
+        Execute a walrus script with the given arguments.
+
+        :param script_name: The base name of the script to execute.
+        :param list keys: Keys referenced by the script.
+        :param list args: Arguments passed in to the script.
+        :returns: Return value of script.
+
+        .. note:: Redis scripts require two parameters, ``keys``
+            and ``args``, which are referenced in lua as ``KEYS``
+            and ``ARGV``.
+        """
+        return await self._scripts[script_name](keys, args)
+
+    async def zset_set_by_score(self, name: str, min: int, max: int, score: int, num: int = '') -> list:
+        """ 获取指定区间数据并修改分数为指定值 """
+        return await self.run_script('zset_set_by_score', keys=[name], args=[min, max, score, num])
+
+    async def zset_increase_by_score(self, name: str, min: int, max: int, increment: int, num: int = '') -> list:
+        """ 获取指定区间数据并修改分数加上增量 """
+        return await self.run_script('zset_increase_by_score', keys=[name], args=[min, max, increment, num])
+
+    async def zset_del_by_score(self, name: str, min: int, max: int, num: int = '') -> list:
+        """ 获取指定区间数据并删除 """
+        return await self.run_script('zset_del_by_score', keys=[name], args=[min, max, num])
 
     @staticmethod
     async def _isclosed(client):

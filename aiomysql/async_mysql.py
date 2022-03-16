@@ -2,15 +2,13 @@
 import asyncio
 import traceback
 import aiomysql
-from .logger import logger_manager
-root_logger = logger_manager.get_logger()
-
+from loguru import logger
+# 通过使用连接池, 大幅度提升查询效率
 
 class AsyncMysqlClient(object):
 
-    def __init__(self, pool, logger):
+    def __init__(self, pool):
         self.pool = pool
-        self.logger = logger
         self.connection = None
 
     async def get_client(self):
@@ -49,7 +47,7 @@ class AsyncMysqlClient(object):
                 await self.cursor.execute(sql)
                 return await self.cursor.fetchone()
             except BaseException:
-                self.logger.error("retry: {}, sql: {}\n{}".format(i, sql, traceback.format_exc()))
+                logger.error("retry: {}, sql: {}\n{}".format(i, sql, traceback.format_exc()))
                 if i + 1 == retry:
                     if raise_error:
                         raise
@@ -60,7 +58,7 @@ class AsyncMysqlClient(object):
                 await self.cursor.execute(sql)
                 return await self.cursor.fetchone()
             except BaseException:
-                self.logger.error("retry: {}, sql: {}\n{}".format(i, sql, traceback.format_exc()))
+                logger.error("retry: {}, sql: {}\n{}".format(i, sql, traceback.format_exc()))
                 if i + 1 == retry:
                     if raise_error:
                         raise
@@ -71,7 +69,7 @@ class AsyncMysqlClient(object):
                 await self.cursor.execute(sql)
                 return await self.cursor.fetchone()
             except BaseException:
-                self.logger.error("retry: {}, sql: {}\n{}".format(i, sql, traceback.format_exc()))
+                logger.error("retry: {}, sql: {}\n{}".format(i, sql, traceback.format_exc()))
                 if i + 1 == retry:
                     if raise_error:
                         raise
@@ -82,7 +80,7 @@ class AsyncMysqlClient(object):
                 await self.cursor.execute(sql)
                 return await self.cursor.fetchall()
             except BaseException:
-                self.logger.error("retry: {}, sql: {}\n{}".format(i, sql, traceback.format_exc()))
+                logger.error("retry: {}, sql: {}\n{}".format(i, sql, traceback.format_exc()))
                 if i + 1 == retry:
                     if raise_error:
                         raise
@@ -90,7 +88,7 @@ class AsyncMysqlClient(object):
 
 class AsyncMysqlPool:
 
-    def __init__(self, host, port, user, password, db, charset="utf8", minsize=3, maxsize=30, logger=root_logger):
+    def __init__(self, host, port, user, password, db, charset="utf8", minsize=3, maxsize=30):
         self.config = dict(
             host=host,
             port=port,
@@ -102,8 +100,7 @@ class AsyncMysqlPool:
             maxsize=maxsize
         )
         self.pool = aiomysql.Pool(autocommit=True, echo=False, pool_recycle=-1, loop=asyncio.get_event_loop(), **self.config)
-        self.logger = logger
 
     @property
     def client(self):
-        return AsyncMysqlClient(self.pool, self.logger)
+        return AsyncMysqlClient(self.pool)
