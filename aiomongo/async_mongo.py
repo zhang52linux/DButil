@@ -112,7 +112,7 @@ class AsyncMongo:
     @staticmethod
     def get_client(*args, **kwargs):
         """ Get mongo async client. """
-        return motor.motor_asyncio.AsyncIOMotorClient(*args, **kwargs)
+        return motor.motor_asyncio.AsyncIOMotorClient(*args, **kwargs, serverSelectionTimeoutMS=5000)
 
     def get_database(self, database_name: str) -> Database:
         """ Get database object. """
@@ -122,7 +122,7 @@ class AsyncMongo:
         """ Get collection object. """
         return self.db.get_collection(coll_name, **kwargs)
 
-    # ------------------------------------------------------------------------ #
+    # -----------------------------CRUD---------------------------------- #
 
     async def create_index(self, coll_name: str, keys: Sequence, sort_type=pymongo.ASCENDING, unique=False):
         """Creates an index on this collection.
