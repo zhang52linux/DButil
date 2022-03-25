@@ -1,8 +1,6 @@
 # _*_ coding:utf-8 _*_
 import asyncio
 import aioredis
-import random
-import aiohttp
 import uvloop  # pip3 install uvloop <速度更快, 适用linux>
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 

@@ -11,7 +11,7 @@ from pymongo.collection import Collection
 from pymongo.errors import BulkWriteError
 from pymongo.results import BulkWriteResult
 from typing import Sequence
-from .safe_function import retry_if_exception
+from common.async_wrap_funs import retry_if_exception
 
 
 class MongoGetter:

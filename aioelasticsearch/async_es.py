@@ -6,7 +6,8 @@ import traceback
 from loguru import logger
 from elasticsearch import AsyncElasticsearch
 from elasticsearch.exceptions import ConnectionError, ConnectionTimeout
-# 基于scroll id 做的查询，适合深度查询，查询会创建scroll context ,有状态, 默认500个，超过后悔报错, 深度查询推荐search after
+# 基于scroll id 做的查询，适合深度查询，查询会创建scroll context ,有状态, 默认500个，超过后会报错, 深度查询推荐search after
+
 
 class ESGetter:
 
