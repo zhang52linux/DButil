@@ -16,7 +16,7 @@ from common.async_wrap_funs import retry_if_exception
 
 class MongoGetter:
 
-    def __init__(self, client, collection, body: dict = None, return_fields: dict = None, page_size: int = 10000, batch_size: int = 10000, total_size: int = None, cursor=None, retry=5):
+    def __init__(self, client, collection, body: dict = None, return_fields: dict = None, page_size: int = 10000000000, batch_size: int = 100, total_size: int = None, cursor=None, retry=5):
         self.client = client
         self.collection = collection
         self.body = body or {}
@@ -34,6 +34,7 @@ class MongoGetter:
 
         if self.fetch_count >= self.total_size:
             raise StopAsyncIteration
+
         async for document in self.cursor:
             self.buffer.append(document)
             self.fetch_count += 1
