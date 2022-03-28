@@ -1,7 +1,9 @@
 # _*_ coding:utf-8 _*_
+import os
+import glob
 import asyncio
 import aioredis
-import uvloop  # pip3 install uvloop <速度更快, 适用linux>
+import uvloop
 asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 
@@ -22,7 +24,7 @@ class AsyncRedis(object):
         )
         self.client_map = {}
         self.init_scripts()
-    
+
     def init_scripts(self, script_dir=None):
         """ 加载所有lua脚本 默认从scripts目录下获取 """
         self._scripts = {}
