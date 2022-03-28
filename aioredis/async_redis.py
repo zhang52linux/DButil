@@ -23,7 +23,7 @@ class AsyncRedis(object):
             db=config["db"]
         )
         self.client_map = {}
-        self.init_scripts()
+        # self.init_scripts()
 
     def init_scripts(self, script_dir=None):
         """ 加载所有lua脚本 默认从scripts目录下获取 """
