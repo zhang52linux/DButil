@@ -93,7 +93,7 @@ class AsyncRedis(object):
             decode_responses=True
         )
         self.client_map = {}
-        self.url = "redis://{0}:{1}".format(config['host'], config['port'])
+        self.url = f"redis://{config['host']}:{config['port']}"
 
     @staticmethod
     async def _isclosed(client):

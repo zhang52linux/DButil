@@ -84,7 +84,6 @@ class AsyncRedisSentinelHelper():
 
     async def rpush_data(self, key: str, value: list) -> bool:
         async with self.master.pipeline(transaction=True) as pipe:
-            value = list(map(lambda e: feapson.dumps(e), value))
             ok1 = await (pipe.rpush(key, *value).execute())
         return ok1
 
