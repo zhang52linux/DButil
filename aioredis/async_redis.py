@@ -9,6 +9,7 @@ from typing import Mapping, Optional, Union
 from aioredis.connection import ConnectionPool
 
 
+# 封装aioredis.Redis，并添加lua脚本执行函数
 class AsyncRedisDB(aioredis.Redis):
     def __init__(
         self,
@@ -108,6 +109,7 @@ class AsyncRedis(object):
             self.client_map[self.config["db"]] = AsyncRedisDB(connection_pool=pool)
         return self.client_map[self.config["db"]]
 
+    @property
     async def client(self, db=None) -> aioredis.Redis:
         """ 默认不给db赋值 """
         self.config["db"] = self.default_db if db is None else db
